@@ -10,24 +10,52 @@ UCLASS()
 class ACTIONROGUELIKE_API ASCharacter : public ACharacter
 {
 	GENERATED_BODY()
-
+	
 public:
 	// Sets default values for this character's properties
 	ASCharacter();
 
 protected:
+	UPROPERTY(EditAnywhere, Category= "Attack")
+	TSubclassOf<AActor> ProjectileClass;
+
+	UPROPERTY(EditAnywhere, Category= "Attack")
+	UAnimMontage* AttackAnim;
+	
+	UPROPERTY(EditAnywhere)
+	float PrimaryAttackRate = 0.2f;
+	
 	UPROPERTY(VisibleAnywhere)
 	class USpringArmComponent* SpringArmComp;
 	
 	UPROPERTY(VisibleAnywhere)
 	class UCameraComponent* CameraComp;
+
+	UPROPERTY(VisibleAnywhere)
+	class USInteractionComponent* InteractionComp;
+
+	FTimerHandle TimerHandle_PrimaryAttack;
+
+
+	
+
+	
+	
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-
-private:
+	
 	void MoveForward(float Value);
+	
 	void MoveRight(float Value);
 
+	void PrimaryAttack();
+
+	void PrimaryAttack_TimeElapsed();
+
+	void PrimaryInteract();
+
+	
+	
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
