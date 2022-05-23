@@ -20,7 +20,19 @@ protected:
 	TSubclassOf<AActor> ProjectileClass;
 
 	UPROPERTY(EditAnywhere, Category= "Attack")
+	TSubclassOf<AActor> SpProjectileClass;
+
+	UPROPERTY(EditAnywhere, Category= "Attack")
+	TSubclassOf<AActor> TeleportProjectileClass;
+
+	UPROPERTY(EditAnywhere, Category= "Attack")
 	UAnimMontage* AttackAnim;
+
+	UPROPERTY(EditAnywhere, Category= "Attack")
+	UAnimMontage* SpAttackAnim;
+
+	UPROPERTY(EditAnywhere, Category= "Attack")
+	UAnimMontage* TeleportAnim;
 	
 	UPROPERTY(EditAnywhere)
 	float PrimaryAttackRate = 0.2f;
@@ -36,6 +48,10 @@ protected:
 
 	FTimerHandle TimerHandle_PrimaryAttack;
 
+	FTimerHandle TimerHandle_SpAttack;
+
+	FTimerHandle TimerHandle_Teleport;
+
 
 	
 
@@ -50,7 +66,17 @@ protected:
 
 	void PrimaryAttack();
 
+	void SpecialAttack();
+
+	void Teleport();
+
 	void PrimaryAttack_TimeElapsed();
+
+	void SpAttack_TimeElapsed();
+
+	void Teleport_TimeElapsed();
+
+	void SpawnProjectile(TSubclassOf<AActor> ClassToSpawn);
 
 	void PrimaryInteract();
 

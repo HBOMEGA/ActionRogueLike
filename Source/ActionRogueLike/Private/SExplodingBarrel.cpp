@@ -17,6 +17,15 @@ ASExplodingBarrel::ASExplodingBarrel()
 
 	ForceComp = CreateDefaultSubobject<URadialForceComponent>(TEXT("RadialForce Component"));
 	ForceComp->SetupAttachment(MeshComp);
+	ForceComp->SetAutoActivate(false);
+
+	ForceComp->Radius = 750.0f;
+	ForceComp->ImpulseStrength = 2000.0f;
+	// Optional Ignores 'Mass' of other objects, (if false will take objects mass into consideration
+	ForceComp->bImpulseVelChange = true;
+
+	// Optional, default constructor of component already adds 4 object types to effects, excluding WorldDynamic
+	ForceComp->AddCollisionChannelToAffect(ECC_WorldDynamic);
 
 }
 
@@ -27,10 +36,23 @@ void ASExplodingBarrel::BeginPlay()
 	
 }
 
-// Called every frame
-void ASExplodingBarrel::Tick(float DeltaTime)
+void ASExplodingBarrel::PostInitializeComponents()
 {
-	Super::Tick(DeltaTime);
+	Super::PostInitializeComponents();
 
+	MeshComp->OnComponentHit.AddDynamic( this, &ASExplodingBarrel::OnActorHit);
 }
+
+void ASExplodingBarrel::OnActorHit(UPrimitiveComponent* HitComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+{
+	ForceComp->FireImpulse();
+
+	UE_LOG(LogTemp, Log, TEXT("OnActorHit in Explosive Barrel!"));
+	UE_LOG(LogTemp, Warning, TEXT("OtherActor: %s, At Game Time: %f"), *GetNameSafe(OtherActor), GetWorld()->TimeSeconds);
+
+	FString CombineString = FString::Printf(TEXT("Hit at Location: %s"), *Hit.ImpactPoint.ToString());
+	DrawDebugString(GetWorld(), Hit.ImpactPoint, TEXT("What the fuck"), nullptr, FColor::Emerald, 5.0f, true, 3.0f);
+}
+
 

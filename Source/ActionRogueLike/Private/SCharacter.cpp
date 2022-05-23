@@ -3,11 +3,13 @@
 
 #include "SCharacter.h"
 
+#include "EngineUtils.h"
 #include "SInteractionComponent.h"
-#include "SMagicProjectile.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+
+
 
 // Sets default values
 ASCharacter::ASCharacter()
@@ -50,8 +52,10 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
 	PlayerInputComponent->BindAction(TEXT("PrimaryAttack"), IE_Pressed, this, &ASCharacter::PrimaryAttack );
-	PlayerInputComponent->BindAction(TEXT("Jump"), IE_Pressed, this, &ASCharacter::Jump );
+	PlayerInputComponent->BindAction(TEXT("Jump"), IE_Pressed, this, &ACharacter::Jump );
 	PlayerInputComponent->BindAction(TEXT("PrimaryInteract"), IE_Pressed, this, &ASCharacter::PrimaryInteract );
+	PlayerInputComponent->BindAction(TEXT("SpecialAttack"), IE_Pressed, this, &ASCharacter::SpecialAttack );
+	PlayerInputComponent->BindAction(TEXT("Teleport"),IE_Pressed, this, &ASCharacter::Teleport );
 
 	PlayerInputComponent->BindAxis(TEXT("MoveForward"), this, &ASCharacter::MoveForward );
 	PlayerInputComponent->BindAxis(TEXT("MoveRight"), this, &ASCharacter::MoveRight );
@@ -87,16 +91,70 @@ void ASCharacter::PrimaryAttack()
 	
 }
 
+void ASCharacter::SpecialAttack()
+{
+	PlayAnimMontage(SpAttackAnim);
+	
+	GetWorldTimerManager().SetTimer(TimerHandle_SpAttack, this, &ASCharacter::SpAttack_TimeElapsed, PrimaryAttackRate );
+}
+
+void ASCharacter::Teleport()
+{
+	PlayAnimMontage(TeleportAnim);
+
+	GetWorldTimerManager().SetTimer(TimerHandle_Teleport, this, &ASCharacter::Teleport_TimeElapsed, PrimaryAttackRate );
+}
+
 void ASCharacter::PrimaryAttack_TimeElapsed()
 {
-	FVector HandLocation = GetMesh()->GetSocketLocation(TEXT("Muzzle_01"));
-	FTransform SpawnTM = FTransform(GetControlRotation(), HandLocation);
-	
-	FActorSpawnParameters SpawnParams;
-	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-	SpawnParams.Instigator = this;
-	
-	GetWorld()->SpawnActor<AActor>( ProjectileClass,  SpawnTM, SpawnParams);
+	SpawnProjectile(ProjectileClass);
+}
+
+void ASCharacter::SpAttack_TimeElapsed()
+{
+	SpawnProjectile(SpProjectileClass);
+}
+
+void ASCharacter::Teleport_TimeElapsed()
+{
+	SpawnProjectile(TeleportProjectileClass);
+}
+
+void ASCharacter::SpawnProjectile(TSubclassOf<AActor> ClassToSpawn)
+{
+	if (ensureAlways(ClassToSpawn))
+	{
+		FVector HandLocation = GetMesh()->GetSocketLocation(TEXT("Muzzle_01"));
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		SpawnParams.Instigator = this;
+
+		FCollisionShape Shape;
+		Shape.SetSphere(20.0f);
+
+		FCollisionQueryParams QueryParams;
+		QueryParams.AddIgnoredActor(this);
+
+		FCollisionObjectQueryParams ObjectQueryParams;
+		ObjectQueryParams.AddObjectTypesToQuery(ECC_WorldDynamic);
+		ObjectQueryParams.AddObjectTypesToQuery(ECC_WorldStatic);
+		ObjectQueryParams.AddObjectTypesToQuery(ECC_Pawn);
+		
+		FVector TraceStart = CameraComp->GetComponentLocation();
+		FVector TraceEnd = TraceStart + (GetControlRotation().Vector() * 5000);
+
+		FHitResult Hit;
+
+		if (GetWorld()->SweepSingleByObjectType(Hit, TraceStart, TraceEnd, FQuat::Identity, ObjectQueryParams, Shape, QueryParams))
+		{
+			TraceEnd = Hit.ImpactPoint;
+		}
+		// find new direction/location from hand pointing to impact point in world
+		FRotator ProjRotation = FRotationMatrix::MakeFromX(TraceEnd - HandLocation).Rotator();
+		FTransform SpawnTM = FTransform(ProjRotation, HandLocation);
+		
+		GetWorld()->SpawnActor<AActor>( ClassToSpawn,  SpawnTM, SpawnParams);
+	}	
 }
 
 void ASCharacter::PrimaryInteract()

@@ -42,9 +42,9 @@ void USInteractionComponent::PrimaryInteract()
 	
 	FVector EyeLocation;
 	FRotator EyeRotation;
-	MyOwner->GetActorEyesViewPoint( EyeLocation, EyeRotation );
+	MyOwner->GetInstigatorController()->GetPlayerViewPoint( EyeLocation, EyeRotation );
 
-	FVector End = EyeLocation + ( EyeRotation.Vector() * 1000 ) ;
+	FVector End = EyeLocation + (  EyeRotation.Vector() * 1000 ) ;
 	
 	// FHitResult Hit;
 	// bool bBlockingHit = GetWorld()->LineTraceSingleByObjectType( Hit, EyeLocation, End, ObjectQueryParams );
@@ -74,7 +74,7 @@ void USInteractionComponent::PrimaryInteract()
 	
 
 	
-	DrawDebugLine(GetWorld(), EyeLocation, End, LineColor, false, 5.0f, 0, 2.0f );
+	DrawDebugLine(GetWorld(), EyeLocation, End, LineColor, false, 5.0f, 0, 3.0f );
 
 	
 }
