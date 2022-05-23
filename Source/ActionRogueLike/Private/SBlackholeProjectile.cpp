@@ -8,6 +8,7 @@
 
 ASBlackholeProjectile::ASBlackholeProjectile()
 {
+	
 	ForceComp = CreateDefaultSubobject<URadialForceComponent>(TEXT("Force Component"));
 	ForceComp->SetupAttachment(RootComponent);
 	ForceComp->SetAutoActivate(false);
@@ -25,4 +26,6 @@ ASBlackholeProjectile::ASBlackholeProjectile()
 	MovementComp->bRotationFollowsVelocity = true;
 	MovementComp->bInitialVelocityInLocalSpace = true;
 	MovementComp->ProjectileGravityScale = 0.0f;
+
+	SetDamageAmount(-50.0f);
 }

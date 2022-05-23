@@ -46,6 +46,9 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	class USInteractionComponent* InteractionComp;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category= "Components")
+	class USAttributeComponent* AttribComp;
+
 	FTimerHandle TimerHandle_PrimaryAttack;
 
 	FTimerHandle TimerHandle_SpAttack;

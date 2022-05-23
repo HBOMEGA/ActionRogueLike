@@ -3,6 +3,7 @@
 
 #include "STeleportProjectile.h"
 
+#include "Components/SphereComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystem.h"

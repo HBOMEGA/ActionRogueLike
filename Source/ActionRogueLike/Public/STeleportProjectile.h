@@ -30,8 +30,7 @@ protected:
 	virtual void BeginPlay() override;
 
 	void Explode();
-
-	void Explode_TimeElapsed();
+	
 	void TeleportPlayer();
 
 

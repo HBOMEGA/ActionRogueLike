@@ -4,6 +4,7 @@
 #include "SCharacter.h"
 
 #include "EngineUtils.h"
+#include "SAttributeComponent.h"
 #include "SInteractionComponent.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -19,11 +20,13 @@ ASCharacter::ASCharacter()
 	SpringArmComp = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	SpringArmComp->bUsePawnControlRotation = true;
 	SpringArmComp->SetupAttachment(RootComponent);
-
+	
 	CameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComp"));
 	CameraComp->SetupAttachment(SpringArmComp);
 
 	InteractionComp = CreateDefaultSubobject<USInteractionComponent>(TEXT("Interaction Component"));
+
+	AttribComp = CreateDefaultSubobject<USAttributeComponent>(TEXT(" Attribute Component"));
 	
 
 	GetCharacterMovement()->bOrientRotationToMovement = true;
@@ -140,6 +143,9 @@ void ASCharacter::SpawnProjectile(TSubclassOf<AActor> ClassToSpawn)
 		ObjectQueryParams.AddObjectTypesToQuery(ECC_WorldStatic);
 		ObjectQueryParams.AddObjectTypesToQuery(ECC_Pawn);
 		
+		// FVector Location;
+		// FRotator Rotation;
+		// GetController()->GetPlayerViewPoint(Location, Rotation) ;    
 		FVector TraceStart = CameraComp->GetComponentLocation();
 		FVector TraceEnd = TraceStart + (GetControlRotation().Vector() * 5000);
 
