@@ -21,10 +21,7 @@ public:
 protected:
 
 	UPROPERTY(EditAnywhere, Category= "Attack")
-	class UParticleSystem* ExplodeParticle;
-
-
-	
+	class UParticleSystem* ExplodeParticle;	
 
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

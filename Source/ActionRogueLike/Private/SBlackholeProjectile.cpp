@@ -20,11 +20,8 @@ ASBlackholeProjectile::ASBlackholeProjectile()
 
 	// Optional, default constructor of component already adds 4 object types to effects, excluding WorldDynamic
 	ForceComp->AddCollisionChannelToAffect(ECC_WorldDynamic);
-
-	MovementComp = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("Movement Component"));
+	
 	MovementComp->InitialSpeed= 1300.0f;
-	MovementComp->bRotationFollowsVelocity = true;
-	MovementComp->bInitialVelocityInLocalSpace = true;
 	MovementComp->ProjectileGravityScale = 0.0f;
 
 	SetDamageAmount(-50.0f);

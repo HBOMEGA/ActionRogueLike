@@ -23,6 +23,11 @@ ASBaseProjectile::ASBaseProjectile()
 	EffectComp = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("Effect Component"));
 	EffectComp->SetupAttachment(SphereComp);
 
+	MovementComp = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("Movement Component"));
+	MovementComp->InitialSpeed= 1000.0f;
+	MovementComp->bRotationFollowsVelocity = true;
+	MovementComp->bInitialVelocityInLocalSpace = true;
+	MovementComp->ProjectileGravityScale = 0.0f;
 
 	
 }
@@ -44,6 +49,8 @@ void ASBaseProjectile::OnActorOverlap(UPrimitiveComponent* OverlappedComponent, 
 		if (AttributeComp )
 		{
 			AttributeComp->ApplyHealthChanges(DamageAmount);
+
+			Destroy();
 		}
 	}
 }

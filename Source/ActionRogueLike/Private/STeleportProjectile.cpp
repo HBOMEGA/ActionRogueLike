@@ -10,21 +10,15 @@
 
 ASTeleportProjectile::ASTeleportProjectile()
 {
-	MovementComp = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("Movement Component"));
-	MovementComp->InitialSpeed= 1000.0f;
-	MovementComp->bRotationFollowsVelocity = true;
-	MovementComp->bInitialVelocityInLocalSpace = true;
-	MovementComp->ProjectileGravityScale = 0.0f;
-
 	ExplodeParticle = CreateDefaultSubobject<UParticleSystem>(TEXT("Explode Particle"));
-
-	
+	SphereComp->OnComponentHit.AddDynamic(this, &ASTeleportProjectile::OnActorHit );	
 }
 
 void ASTeleportProjectile::BeginPlay()
 {
 	Super::BeginPlay();
 
+	
 	GetWorldTimerManager().SetTimer(TimerHandle_Explode, this, &ASTeleportProjectile::Explode, ExplodeRate );
 }
 
