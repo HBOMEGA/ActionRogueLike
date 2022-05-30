@@ -3,17 +3,39 @@
 
 #include "SMagicProjectile.h"
 
+#include "SAttributeComponent.h"
+#include <Components/SphereComponent.h>
+
 
 // Sets default values
 ASMagicProjectile::ASMagicProjectile()
 {
-	SetDamageAmount( -20.0f );
+	SphereComp->OnComponentBeginOverlap.AddDynamic(this, &ASMagicProjectile::OnActorOverlap);
+	
 }
+
+void ASMagicProjectile::OnActorOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (OtherActor && OtherActor != GetInstigator())
+	{
+		USAttributeComponent* AttribComp = Cast<USAttributeComponent>( OtherActor->GetComponentByClass(USAttributeComponent::StaticClass() ) );
+		if ( AttribComp )
+		{
+			AttribComp->ApplyHealthChanges( -20.0f );
+
+			Explode();
+		}
+	}
+}
+
+
 
 // Called when the game starts or when spawned
 void ASMagicProjectile::BeginPlay()
 {
-	Super::BeginPlay();	
+	Super::BeginPlay();
+	//SphereComp->OnComponentHit.AddDynamic(this, &ASMagicProjectile::OnActorHit );
 }
 
 

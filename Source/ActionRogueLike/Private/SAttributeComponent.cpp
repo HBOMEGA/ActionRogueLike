@@ -10,9 +10,16 @@ USAttributeComponent::USAttributeComponent()
 	Health = 100;
 }
 
+bool USAttributeComponent::bIsAlive() const
+{
+	return  Health > 0.0f;
+}
+
 bool USAttributeComponent::ApplyHealthChanges(float Delta)
 {
 	Health += Delta;
+
+	OnHealthChanged.Broadcast(nullptr, this, Health, Delta);
 
 	return true;
 }

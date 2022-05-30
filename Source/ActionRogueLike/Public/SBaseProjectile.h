@@ -6,20 +6,15 @@
 #include "GameFramework/Actor.h"
 #include "SBaseProjectile.generated.h"
 
-UCLASS()
+UCLASS(ABSTRACT)
 class ACTIONROGUELIKE_API ASBaseProjectile : public AActor
 {
 	GENERATED_BODY()
-	
-public:	
-	// Sets default values for this actor's properties
-	ASBaseProjectile();
 
 protected:
-	UFUNCTION()
-	void OnActorOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
-		int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
-
+	UPROPERTY(EditDefaultsOnly, Category= "Effects")
+	UParticleSystem* ImpactVfx;
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	class USphereComponent* SphereComp;
 
@@ -27,22 +22,27 @@ protected:
 	class UProjectileMovementComponent* MovementComp;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	class UParticleSystemComponent* EffectComp;
+	UParticleSystemComponent* EffectComp;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	UAudioComponent* FlightSound;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	USoundBase* ImpactSound;
 	
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
 
 	UFUNCTION()
-	void SetDamageAmount( float Value );
+	virtual void OnActorHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
+		FVector NormalImpulse, const FHitResult & Hit);
+
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+	void Explode();
+
+	virtual void PostInitializeComponents() override;
 	
 public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
 
-	
-
-private:
-	UPROPERTY(VisibleAnywhere)
-	float DamageAmount{};
+	// Sets default values for this actor's properties
+	ASBaseProjectile();
 
 };

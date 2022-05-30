@@ -3,69 +3,68 @@
 
 #include "SBaseProjectile.h"
 
-#include "SAttributeComponent.h"
+#include "Components/AudioComponent.h"
 #include "Components/SphereComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystemComponent.h"
+
 
 // Sets default values
 ASBaseProjectile::ASBaseProjectile()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
-
-	SphereComp = CreateDefaultSubobject<USphereComponent>(TEXT("Sphere Component"));	
+ 	SphereComp = CreateDefaultSubobject<USphereComponent>(TEXT("Sphere Component"));	
 	SphereComp->SetCollisionObjectType(ECC_WorldDynamic);
 	SphereComp->SetCollisionProfileName( TEXT("Projectile"));	
 	
+	SphereComp->IgnoreActorWhenMoving( GetInstigator(), true);
 	RootComponent = SphereComp;
-
-	EffectComp = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("Effect Component"));
+	
+	EffectComp = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("Effect Component"));	
 	EffectComp->SetupAttachment(SphereComp);
-
+	
 	MovementComp = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("Movement Component"));
-	MovementComp->InitialSpeed= 1000.0f;
+	MovementComp->InitialSpeed= 8000.0f;
 	MovementComp->bRotationFollowsVelocity = true;
 	MovementComp->bInitialVelocityInLocalSpace = true;
 	MovementComp->ProjectileGravityScale = 0.0f;
 
-	
+	FlightSound = CreateDefaultSubobject<UAudioComponent>(TEXT("FlightAudio Comp"));
+	FlightSound->SetupAttachment(SphereComp);
+
+	ImpactSound = CreateDefaultSubobject<USoundBase>(TEXT("ImpactAudio Comp"));
 }
 
-// Called when the game starts or when spawned
-void ASBaseProjectile::BeginPlay()
+void ASBaseProjectile::OnActorHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
+	FVector NormalImpulse, const FHitResult& Hit)
 {
-	Super::BeginPlay();	
-	SphereComp->IgnoreActorWhenMoving( GetInstigator(), true);
-	SphereComp->OnComponentBeginOverlap.AddDynamic(this, &ASBaseProjectile::OnActorOverlap);
+	UE_LOG(LogTemp, Warning, TEXT("Calling Explode!"));
+	Explode();
 }
 
-void ASBaseProjectile::OnActorOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+void ASBaseProjectile::Explode_Implementation()
 {
-	if (OtherActor)
-	{
-		USAttributeComponent* AttributeComp = Cast<USAttributeComponent>( OtherActor->GetComponentByClass(USAttributeComponent::StaticClass()));
-		if (AttributeComp )
-		{
-			AttributeComp->ApplyHealthChanges(DamageAmount);
+	if (ensure( IsValid(this) ) )
+	{		
+		DrawDebugSphere(GetWorld(), GetActorLocation(), 10.0f, 12, FColor::Red, false, 2.0f );
+		
+		UGameplayStatics::SpawnEmitterAtLocation(this, ImpactVfx, GetActorLocation(), GetActorRotation() );
 
-			Destroy();
-		}
+		UGameplayStatics::SpawnSoundAtLocation(GetWorld(), ImpactSound, GetActorLocation(), GetActorRotation() );
+		
+		Destroy();
 	}
 }
 
-
-
-void ASBaseProjectile::SetDamageAmount(float Value)
+void ASBaseProjectile::PostInitializeComponents()
 {
-	DamageAmount = Value;
+	Super::PostInitializeComponents();
+	SphereComp->OnComponentHit.AddDynamic(this, &ASBaseProjectile::OnActorHit);	
+	
 }
 
-// Called every frame
-void ASBaseProjectile::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
 
-}
+
+
+
 

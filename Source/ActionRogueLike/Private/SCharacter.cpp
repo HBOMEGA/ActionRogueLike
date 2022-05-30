@@ -35,6 +35,14 @@ ASCharacter::ASCharacter()
 
 }
 
+void ASCharacter::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+
+	AttribComp->OnHealthChanged.AddDynamic(this, &ASCharacter::OnHealthChanged );
+}
+
+
 // Called when the game starts or when spawned
 void ASCharacter::BeginPlay()
 {
@@ -132,8 +140,11 @@ void ASCharacter::SpawnProjectile(TSubclassOf<AActor> ClassToSpawn)
 		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 		SpawnParams.Instigator = this;
 
+		float SweepRadius = 20.0f;
+		int32 SweepDistanceFallback = 5000;
+		
 		FCollisionShape Shape;
-		Shape.SetSphere(20.0f);
+		Shape.SetSphere(SweepRadius);
 
 		FCollisionQueryParams QueryParams;
 		QueryParams.AddIgnoredActor(this);
@@ -146,8 +157,10 @@ void ASCharacter::SpawnProjectile(TSubclassOf<AActor> ClassToSpawn)
 		// FVector Location;
 		// FRotator Rotation;
 		// GetController()->GetPlayerViewPoint(Location, Rotation) ;    
-		FVector TraceStart = CameraComp->GetComponentLocation();
-		FVector TraceEnd = TraceStart + (GetControlRotation().Vector() * 5000);
+		
+		FVector TraceDirection = GetControlRotation().Vector();
+		FVector TraceStart = CameraComp->GetComponentLocation() + ( TraceDirection * SweepRadius); // GetPawnViewLocation();
+		FVector TraceEnd =  TraceStart + ( TraceDirection * SweepDistanceFallback);
 
 		FHitResult Hit;
 
@@ -156,7 +169,7 @@ void ASCharacter::SpawnProjectile(TSubclassOf<AActor> ClassToSpawn)
 			TraceEnd = Hit.ImpactPoint;
 		}
 		// find new direction/location from hand pointing to impact point in world
-		FRotator ProjRotation = FRotationMatrix::MakeFromX(TraceEnd - HandLocation).Rotator();
+		FRotator ProjRotation = (TraceEnd - HandLocation).Rotation();
 		FTransform SpawnTM = FTransform(ProjRotation, HandLocation);
 		
 		GetWorld()->SpawnActor<AActor>( ClassToSpawn,  SpawnTM, SpawnParams);
@@ -168,5 +181,16 @@ void ASCharacter::PrimaryInteract()
 	if ( InteractionComp )
 	{
 		InteractionComp->PrimaryInteract();
+	}
+}
+
+void ASCharacter::OnHealthChanged(AActor* InstigatorActor, USAttributeComponent* OwningComp, float NewHealth,
+	float Delta)
+{
+	if ( NewHealth <= 0.0f && Delta <= 0.0f )
+	{
+		APlayerController* Pc = Cast<APlayerController>(GetController() );
+		DisableInput(Pc);
+		
 	}
 }
