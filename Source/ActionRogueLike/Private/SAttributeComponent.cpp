@@ -3,11 +3,24 @@
 
 #include "SAttributeComponent.h"
 
+#include "SGameModeBase.h"
+#include "Engine/ICookInfo.h"
+
 // Sets default values for this component's properties
 USAttributeComponent::USAttributeComponent()
 {
+	MaxHealth = 100.0f;
+	Health = MaxHealth;
+}
 
-	Health = 100;
+bool USAttributeComponent::IsFullHealth() const
+{
+	return Health == MaxHealth;
+}
+
+bool USAttributeComponent::KillEm(AActor* InstigatorActor)
+{
+	return ApplyHealthChanges(InstigatorActor, -GetMaxHealth());
 }
 
 bool USAttributeComponent::bIsAlive() const
@@ -15,13 +28,65 @@ bool USAttributeComponent::bIsAlive() const
 	return  Health > 0.0f;
 }
 
-bool USAttributeComponent::ApplyHealthChanges(float Delta)
+bool USAttributeComponent::ApplyHealthChanges( AActor* InstigatorActor, float Delta)
 {
-	Health += Delta;
+	if ( !GetOwner()->CanBeDamaged() && Delta <= 0.0f )
+	{
+		return false;
+	}
 
-	OnHealthChanged.Broadcast(nullptr, this, Health, Delta);
+	if (Delta < 0.0f )
+	{
+		float DamageMultiplier = CVarDamageMultiplier.GetValueOnGameThread();
+		Delta *= DamageMultiplier;
+	}
+	
+	float OldHealth = Health;	
+	
+	Health = FMath::Clamp(Health + Delta, 0.0f, MaxHealth);
+	
+	float ActualDelta = Health - OldHealth;	
 
-	return true;
+	OnHealthChanged.Broadcast(InstigatorActor, this, Health, MaxHealth, ActualDelta);
+
+	if (ActualDelta < 0.0f && Health == 0.0f )
+	{
+		ASGameModeBase* GM = GetWorld()->GetAuthGameMode<ASGameModeBase>();
+		if (GM)
+		{
+			GM->OnActorKilled( GetOwner(), InstigatorActor );
+		}
+	}
+
+	return ActualDelta != 0;
 }
 
+float USAttributeComponent::GetHealth() const
+{
+	return Health;
+}
 
+float USAttributeComponent::GetMaxHealth() const
+{
+	return MaxHealth;
+}
+
+USAttributeComponent* USAttributeComponent::GetAttributes(AActor* FromActor)
+{
+	if (FromActor )
+	{
+		return Cast<USAttributeComponent>(FromActor->GetComponentByClass(USAttributeComponent::StaticClass()));
+	}
+
+	return nullptr;
+}
+
+bool USAttributeComponent::IsActorAlive(AActor* Actor)
+{
+	USAttributeComponent* AttributeComp = GetAttributes( Actor );
+	if ( AttributeComp )
+	{
+		return AttributeComp->bIsAlive();
+	}
+	return false;
+}

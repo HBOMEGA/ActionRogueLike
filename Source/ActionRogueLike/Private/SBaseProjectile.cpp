@@ -33,6 +33,9 @@ ASBaseProjectile::ASBaseProjectile()
 	FlightSound->SetupAttachment(SphereComp);
 
 	ImpactSound = CreateDefaultSubobject<USoundBase>(TEXT("ImpactAudio Comp"));
+
+	InnerRadius = 0.0;
+	OuterRadius = 0.0;
 }
 
 void ASBaseProjectile::OnActorHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
@@ -51,6 +54,8 @@ void ASBaseProjectile::Explode_Implementation()
 		UGameplayStatics::SpawnEmitterAtLocation(this, ImpactVfx, GetActorLocation(), GetActorRotation() );
 
 		UGameplayStatics::SpawnSoundAtLocation(GetWorld(), ImpactSound, GetActorLocation(), GetActorRotation() );
+		
+		UGameplayStatics::PlayWorldCameraShake(GetWorld(), Shake_Impact, GetActorLocation(), InnerRadius, OuterRadius );
 		
 		Destroy();
 	}

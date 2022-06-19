@@ -16,27 +16,19 @@ public:
 	ASCharacter();
 
 protected:
-	UPROPERTY(EditAnywhere, Category= "Attack")
-	TSubclassOf<AActor> ProjectileClass;
-
-	UPROPERTY(EditAnywhere, Category= "Attack")
-	TSubclassOf<AActor> SpProjectileClass;
-
-	UPROPERTY(EditAnywhere, Category= "Attack")
-	TSubclassOf<AActor> TeleportProjectileClass;
-
-	UPROPERTY(EditAnywhere, Category= "Attack")
-	UAnimMontage* AttackAnim;
-
+	
+	UPROPERTY(VisibleAnywhere, Category= "Effects")
+	FName TimeToHitParamName;
+	
 	UPROPERTY(EditAnywhere, Category= "Attack")
 	UAnimMontage* SpAttackAnim;
 
 	UPROPERTY(EditAnywhere, Category= "Attack")
 	UAnimMontage* TeleportAnim;
-	
-	UPROPERTY(EditAnywhere)
-	float PrimaryAttackRate = 0.2f;
-	
+
+	UPROPERTY(EditAnywhere, Category= "Attack")
+	UAnimMontage* AttackAnim;
+		
 	UPROPERTY(VisibleAnywhere)
 	class USpringArmComponent* SpringArmComp;
 	
@@ -49,52 +41,42 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category= "Components")
 	class USAttributeComponent* AttribComp;
 
-	FTimerHandle TimerHandle_PrimaryAttack;
-
-	FTimerHandle TimerHandle_SpAttack;
-
-	FTimerHandle TimerHandle_Teleport;
-
-
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category= "Components")
+	class USActionComponent* ActionComp;
 	
-
-	
-	
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
 	
 	void MoveForward(float Value);
 	
 	void MoveRight(float Value);
+	
+
+	void SprintStart();
+
+	void SprintStop();
+	
 
 	void PrimaryAttack();
 
 	void SpecialAttack();
 
-	void Teleport();
-
-	void PrimaryAttack_TimeElapsed();
-
-	void SpAttack_TimeElapsed();
-
-	void Teleport_TimeElapsed();
-
-	void SpawnProjectile(TSubclassOf<AActor> ClassToSpawn);
-
+	void TeleportAttack();
+	
 	void PrimaryInteract();
 
 	UFUNCTION()
-	void OnHealthChanged(AActor* InstigatorActor, USAttributeComponent* OwningComp, float NewHealth, float Delta );
+	void OnHealthChanged(AActor* InstigatorActor, USAttributeComponent* OwningComp, float NewHealth, float MaximumHealth, float Delta );
 
 	virtual void PostInitializeComponents() override;
 
+	virtual FVector GetPawnViewLocation() const override; 
 	
 	
 public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-
+	
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	UFUNCTION(Exec)
+	void HealSelf( float Amount = 100.0f );
 
 };

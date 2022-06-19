@@ -29,13 +29,6 @@ ASExplodingBarrel::ASExplodingBarrel()
 
 }
 
-// Called when the game starts or when spawned
-void ASExplodingBarrel::BeginPlay()
-{
-	Super::BeginPlay();
-	
-}
-
 void ASExplodingBarrel::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();

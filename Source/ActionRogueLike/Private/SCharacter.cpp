@@ -4,29 +4,32 @@
 #include "SCharacter.h"
 
 #include "EngineUtils.h"
+#include "SActionComponent.h"
 #include "SAttributeComponent.h"
 #include "SInteractionComponent.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 
 
 // Sets default values
 ASCharacter::ASCharacter()
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+ 	
 	SpringArmComp = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	SpringArmComp->bUsePawnControlRotation = true;
 	SpringArmComp->SetupAttachment(RootComponent);
 	
 	CameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComp"));
 	CameraComp->SetupAttachment(SpringArmComp);
-
+	
 	InteractionComp = CreateDefaultSubobject<USInteractionComponent>(TEXT("Interaction Component"));
 
 	AttribComp = CreateDefaultSubobject<USAttributeComponent>(TEXT(" Attribute Component"));
+
+	ActionComp = CreateDefaultSubobject<USActionComponent>(TEXT("Action Component"));
 	
 
 	GetCharacterMovement()->bOrientRotationToMovement = true;
@@ -39,22 +42,16 @@ void ASCharacter::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 
+	
+	TimeToHitParamName = TEXT("TimeToHit");
+
 	AttribComp->OnHealthChanged.AddDynamic(this, &ASCharacter::OnHealthChanged );
-}
-
-
-// Called when the game starts or when spawned
-void ASCharacter::BeginPlay()
-{
-	Super::BeginPlay();
 	
 }
 
-// Called every frame
-void ASCharacter::Tick(float DeltaTime)
+FVector ASCharacter::GetPawnViewLocation() const
 {
-	Super::Tick(DeltaTime);
-
+	return CameraComp->GetComponentLocation();
 }
 
 // Called to bind functionality to input
@@ -66,7 +63,10 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAction(TEXT("Jump"), IE_Pressed, this, &ACharacter::Jump );
 	PlayerInputComponent->BindAction(TEXT("PrimaryInteract"), IE_Pressed, this, &ASCharacter::PrimaryInteract );
 	PlayerInputComponent->BindAction(TEXT("SpecialAttack"), IE_Pressed, this, &ASCharacter::SpecialAttack );
-	PlayerInputComponent->BindAction(TEXT("Teleport"),IE_Pressed, this, &ASCharacter::Teleport );
+	PlayerInputComponent->BindAction(TEXT("Teleport"),IE_Pressed, this, &ASCharacter::TeleportAttack );
+	PlayerInputComponent->BindAction(TEXT("Sprint"), IE_Pressed, this, &ASCharacter::SprintStart );
+	PlayerInputComponent->BindAction(TEXT("Sprint"), IE_Released, this, &ASCharacter::SprintStop );
+	// PlayerInputComponent->BindAction(TEXT("Parry"), IE_Pressed, this, &ASCharacter::Parry);
 
 	PlayerInputComponent->BindAxis(TEXT("MoveForward"), this, &ASCharacter::MoveForward );
 	PlayerInputComponent->BindAxis(TEXT("MoveRight"), this, &ASCharacter::MoveRight );
@@ -74,6 +74,11 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAxis(TEXT("Turn"), this, &APawn::AddControllerYawInput );
 	PlayerInputComponent->BindAxis(TEXT("LookUp"), this, &APawn::AddControllerPitchInput );
 
+}
+
+void ASCharacter::HealSelf(float Amount/* =100.0f */ )
+{
+	AttribComp->ApplyHealthChanges(this, Amount);
 }
 
 void ASCharacter::MoveForward(float Value)
@@ -94,86 +99,29 @@ void ASCharacter::MoveRight(float Value)
 	AddMovementInput( RightVector, Value);
 }
 
+void ASCharacter::SprintStart()
+{
+	ActionComp->StartActionByName(this, TEXT("Sprint"));
+}
+
+void ASCharacter::SprintStop()
+{
+	ActionComp->StopActionByName(this, TEXT("Sprint"));
+}
+
 void ASCharacter::PrimaryAttack()
 {
-	PlayAnimMontage(AttackAnim);
-
-	GetWorldTimerManager().SetTimer(TimerHandle_PrimaryAttack, this, &ASCharacter::PrimaryAttack_TimeElapsed, PrimaryAttackRate );	
-	
+	ActionComp->StartActionByName(this, TEXT("PrimaryAttack"));
 }
 
 void ASCharacter::SpecialAttack()
 {
-	PlayAnimMontage(SpAttackAnim);
-	
-	GetWorldTimerManager().SetTimer(TimerHandle_SpAttack, this, &ASCharacter::SpAttack_TimeElapsed, PrimaryAttackRate );
+	ActionComp->StartActionByName(this, TEXT("SpecialAttack"));
 }
 
-void ASCharacter::Teleport()
+void ASCharacter::TeleportAttack()
 {
-	PlayAnimMontage(TeleportAnim);
-
-	GetWorldTimerManager().SetTimer(TimerHandle_Teleport, this, &ASCharacter::Teleport_TimeElapsed, PrimaryAttackRate );
-}
-
-void ASCharacter::PrimaryAttack_TimeElapsed()
-{
-	SpawnProjectile(ProjectileClass);
-}
-
-void ASCharacter::SpAttack_TimeElapsed()
-{
-	SpawnProjectile(SpProjectileClass);
-}
-
-void ASCharacter::Teleport_TimeElapsed()
-{
-	SpawnProjectile(TeleportProjectileClass);
-}
-
-void ASCharacter::SpawnProjectile(TSubclassOf<AActor> ClassToSpawn)
-{
-	if (ensureAlways(ClassToSpawn))
-	{
-		FVector HandLocation = GetMesh()->GetSocketLocation(TEXT("Muzzle_01"));
-		FActorSpawnParameters SpawnParams;
-		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-		SpawnParams.Instigator = this;
-
-		float SweepRadius = 20.0f;
-		int32 SweepDistanceFallback = 5000;
-		
-		FCollisionShape Shape;
-		Shape.SetSphere(SweepRadius);
-
-		FCollisionQueryParams QueryParams;
-		QueryParams.AddIgnoredActor(this);
-
-		FCollisionObjectQueryParams ObjectQueryParams;
-		ObjectQueryParams.AddObjectTypesToQuery(ECC_WorldDynamic);
-		ObjectQueryParams.AddObjectTypesToQuery(ECC_WorldStatic);
-		ObjectQueryParams.AddObjectTypesToQuery(ECC_Pawn);
-		
-		// FVector Location;
-		// FRotator Rotation;
-		// GetController()->GetPlayerViewPoint(Location, Rotation) ;    
-		
-		FVector TraceDirection = GetControlRotation().Vector();
-		FVector TraceStart = CameraComp->GetComponentLocation() + ( TraceDirection * SweepRadius); // GetPawnViewLocation();
-		FVector TraceEnd =  TraceStart + ( TraceDirection * SweepDistanceFallback);
-
-		FHitResult Hit;
-
-		if (GetWorld()->SweepSingleByObjectType(Hit, TraceStart, TraceEnd, FQuat::Identity, ObjectQueryParams, Shape, QueryParams))
-		{
-			TraceEnd = Hit.ImpactPoint;
-		}
-		// find new direction/location from hand pointing to impact point in world
-		FRotator ProjRotation = (TraceEnd - HandLocation).Rotation();
-		FTransform SpawnTM = FTransform(ProjRotation, HandLocation);
-		
-		GetWorld()->SpawnActor<AActor>( ClassToSpawn,  SpawnTM, SpawnParams);
-	}	
+	ActionComp->StartActionByName(this, TEXT("TeleportAttack"));
 }
 
 void ASCharacter::PrimaryInteract()
@@ -184,9 +132,12 @@ void ASCharacter::PrimaryInteract()
 	}
 }
 
-void ASCharacter::OnHealthChanged(AActor* InstigatorActor, USAttributeComponent* OwningComp, float NewHealth,
-	float Delta)
+void ASCharacter::OnHealthChanged(AActor* InstigatorActor, USAttributeComponent* OwningComp, float NewHealth, float MaximumHealth, float Delta)
 {
+	if (Delta < 0.0f )
+	{
+		GetMesh()->SetScalarParameterValueOnMaterials( TimeToHitParamName, GetWorld()->TimeSeconds );
+	}
 	if ( NewHealth <= 0.0f && Delta <= 0.0f )
 	{
 		APlayerController* Pc = Cast<APlayerController>(GetController() );

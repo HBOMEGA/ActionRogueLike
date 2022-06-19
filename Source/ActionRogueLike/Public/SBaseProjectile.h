@@ -12,6 +12,9 @@ class ACTIONROGUELIKE_API ASBaseProjectile : public AActor
 	GENERATED_BODY()
 
 protected:
+	UPROPERTY(EditAnywhere, Category= "CameraShake")
+	TSubclassOf<UCameraShakeBase> Shake_Impact;
+	
 	UPROPERTY(EditDefaultsOnly, Category= "Effects")
 	UParticleSystem* ImpactVfx;
 	
@@ -29,6 +32,12 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	USoundBase* ImpactSound;
+
+	UPROPERTY(EditAnywhere, Category= "CameraShake")
+	float InnerRadius;
+
+	UPROPERTY(EditAnywhere, Category= "CameraShake")
+	float OuterRadius;
 	
 
 	UFUNCTION()

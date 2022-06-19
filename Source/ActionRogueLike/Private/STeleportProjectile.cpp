@@ -42,9 +42,7 @@ void ASTeleportProjectile::TeleportInstigator()
 {
 	AActor* ActorToTeleport = GetInstigator();
 	if (ensure(ActorToTeleport))
-	{
-		ActorToTeleport->TeleportTo(GetActorLocation(), ActorToTeleport->GetActorRotation());
-		
+	{		
 		if (!ActorToTeleport->TeleportTo(GetActorLocation(), ActorToTeleport->GetActorRotation()) )
 		{
 			FCollisionShape Shape;
@@ -58,18 +56,19 @@ void ASTeleportProjectile::TeleportInstigator()
 			ObjectQueryParams.AddObjectTypesToQuery(ECC_WorldStatic);
 			ObjectQueryParams.AddObjectTypesToQuery(ECC_Pawn);
 			
-			FVector NewLocation = GetActorLocation() + FVector(0.0f, 0.0f, 100.0f);
+			FVector StartLocation = GetActorLocation() + GetActorUpVector() * 500;
 
-			FVector TraceEnd = NewLocation + -ActorToTeleport->GetActorUpVector() * 5000;
+			FVector TraceEnd = StartLocation - GetActorUpVector() * 300;
 
 			FHitResult Hit;
 
-			if ( GetWorld()->SweepSingleByObjectType(Hit, NewLocation, TraceEnd, FQuat::Identity, ObjectQueryParams, Shape, QueryParams))
+			if ( !GetWorld()->SweepSingleByObjectType(Hit, StartLocation, TraceEnd, FQuat::Identity, ObjectQueryParams, Shape, QueryParams))
 			{
-				TraceEnd = Hit.ImpactPoint;
+				//TraceEnd = Hit.ImpactPoint;
 				ActorToTeleport->TeleportTo( TraceEnd, ActorToTeleport->GetActorRotation());
-				
-			}
+				Destroy();
+			}			
 		}
+		Destroy();
 	}	
 }
