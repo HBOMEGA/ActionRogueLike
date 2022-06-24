@@ -14,7 +14,10 @@ class ACTIONROGUELIKE_API USActionComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
-public:	
+public:
+
+	
+	
 	// Sets default values for this component's properties
 	USActionComponent();
 
@@ -33,6 +36,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category= "Action")
 	void RemoveAction(USAction* ActionToRemove);
 
+	bool DoesActionExist(TSubclassOf<USAction> Action );
+	
 protected:
 	UPROPERTY(EditAnywhere, Category= "Action")
 	TArray<TSubclassOf<USAction>> DefaultActions;

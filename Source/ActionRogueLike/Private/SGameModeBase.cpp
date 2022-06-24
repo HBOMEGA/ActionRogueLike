@@ -146,7 +146,7 @@ void ASGameModeBase::OnPuSpawnQueryCompleted(UEnvQueryInstanceBlueprintWrapper* 
 			if (DistanceTo < RequiredPickUpDistance )
 			{
 				 // Too Close Try Next Location, Lets still draw a Red Debug Sphere
-				DrawDebugSphere(GetWorld(), PickedLocation, 50.0f, 20, FColor::Red, false, 10.0f);
+				DrawDebugSphere(GetWorld(), PickedLocation, 50.0f, 20, FColor::Red, false, 3.0f);
 
 				// Lets Skip to the next attempt
 				bValidLocation = false;

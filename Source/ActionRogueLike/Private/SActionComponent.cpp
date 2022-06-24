@@ -93,3 +93,13 @@ void USActionComponent::RemoveAction(USAction* ActionToRemove)
 		
 	Actions.Remove(ActionToRemove);
 }
+
+bool USActionComponent::DoesActionExist( TSubclassOf<USAction> Action)
+{
+	for ( TSubclassOf<USAction> Act : DefaultActions )
+	{
+		 return Act == Action; 
+		
+	}
+	return false;
+}

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+// #include "SAction.h"
 #include "GameFramework/Character.h"
 #include "SCharacter.generated.h"
 
@@ -15,7 +16,17 @@ public:
 	// Sets default values for this character's properties
 	ASCharacter();
 
+	virtual void BeginPlay() override;
+
 protected:
+	UPROPERTY(EditDefaultsOnly, Category= "Damage");
+	TSubclassOf<class USActionEffect> ThornActionClass;
+
+	// UPROPERTY()
+	// class USEffect_Thorn* Thorn;
+
+	UPROPERTY(EditAnywhere, Category= "Rage")
+	float SPAttackRageCost;
 	
 	UPROPERTY(VisibleAnywhere, Category= "Effects")
 	FName TimeToHitParamName;
@@ -53,7 +64,8 @@ protected:
 	void SprintStart();
 
 	void SprintStop();
-	
+
+	// void ThornBuff();
 
 	void PrimaryAttack();
 
@@ -65,6 +77,9 @@ protected:
 
 	UFUNCTION()
 	void OnHealthChanged(AActor* InstigatorActor, USAttributeComponent* OwningComp, float NewHealth, float MaximumHealth, float Delta );
+
+	 UFUNCTION()
+	 void OnRageChanged(AActor* InstigatedActor, USAttributeComponent* OwningComp, float NewRage, float MaximumRage, float Delta);
 
 	virtual void PostInitializeComponents() override;
 

@@ -8,6 +8,8 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FiveParams( FOnHealthChanged, AActor*, InstigatedActor,class USAttributeComponent*, OwningComp, float, NewHealth, float, MaximumHealth, float, Delta);
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FiveParams( FOnRageChanged, AActor*, InstigatedActor,class USAttributeComponent*, OwningComp, float, NewRage, float, MaximumRage, float, Delta);
+
 static TAutoConsoleVariable<float>CVarDamageMultiplier( TEXT("su.DamageMultiplier"), 1.0f, TEXT("Global Damage Multiplier for Attribute Component!"), ECVF_Cheat );
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -26,6 +28,8 @@ public:
 	static bool IsActorAlive( AActor* Actor);
 
 protected:
+
+	//Health Attrib
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category= "Attributes")
 	float Health;
 
@@ -33,27 +37,60 @@ protected:
 	float MaxHealth;
 
 	
+	// Rage Attrib
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category= "Attributes")
+	float Rage;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category= "Attributes")
+	float MaxRage;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category= "Attributes")
+	float RagePercentage;
+
+	
 	
 public:
+	
 	UFUNCTION(BlueprintCallable)
 	bool KillEm(AActor* InstigatorActor);
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	bool bIsAlive() const;
-	
+
+	// Health Attrib	
 	UPROPERTY(BlueprintAssignable)
 	FOnHealthChanged OnHealthChanged;
 
 	UFUNCTION(BlueprintCallable)
-	bool IsFullHealth() const;
+	bool IsFullHealth() const;	
 	
 	UFUNCTION(BlueprintCallable, Category= "Attributes")
-	bool ApplyHealthChanges( AActor* InstigatorActor, float Delta);
+	bool ApplyHealthChanges( AActor* InstigatorActor, float Delta);	
 
 	UFUNCTION(BlueprintCallable)
 	float GetHealth() const;
 
 	UFUNCTION(BlueprintCallable)
 	float GetMaxHealth() const;
+
+
+	// Rage Attribs
+	UPROPERTY(BlueprintAssignable)
+	FOnRageChanged OnRageChanged;
+	
+	UFUNCTION(BlueprintCallable, Category= "Attributes")
+	bool AddRage( AActor* InstigatorActor, float Delta);
+
+	UFUNCTION(BlueprintCallable, Category= "Attributes")
+	bool RemoveRage( AActor* InstigatorActor, float Delta);
+
+	// UFUNCTION(BlueprintCallable)
+	// bool IsFullRage() const;
+	
+	UFUNCTION(BlueprintCallable)
+	float GetRage() const;
+
+	// UFUNCTION(BlueprintCallable)
+	// float GetMaxRage() const;
 		
 };

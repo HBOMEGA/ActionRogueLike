@@ -6,6 +6,7 @@
 #include "EngineUtils.h"
 #include "SActionComponent.h"
 #include "SAttributeComponent.h"
+#include "SEffect_Thorn.h"
 #include "SInteractionComponent.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -31,11 +32,25 @@ ASCharacter::ASCharacter()
 
 	ActionComp = CreateDefaultSubobject<USActionComponent>(TEXT("Action Component"));
 	
-
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 
 	bUseControllerRotationYaw = false;
 
+	SPAttackRageCost = 10.0f;
+
+	
+
+}
+
+void ASCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if ( ActionComp )
+	{
+		ActionComp->AddAction(this, ThornActionClass);
+	}
+	
 }
 
 void ASCharacter::PostInitializeComponents()
@@ -109,6 +124,11 @@ void ASCharacter::SprintStop()
 	ActionComp->StopActionByName(this, TEXT("Sprint"));
 }
 
+// void ASCharacter::ThornBuff()
+// {
+// 	ActionComp->StartActionByName(this, TEXT("ThornBuff"));
+// }
+
 void ASCharacter::PrimaryAttack()
 {
 	ActionComp->StartActionByName(this, TEXT("PrimaryAttack"));
@@ -116,7 +136,12 @@ void ASCharacter::PrimaryAttack()
 
 void ASCharacter::SpecialAttack()
 {
-	ActionComp->StartActionByName(this, TEXT("SpecialAttack"));
+	if ( AttribComp->GetRage() >= SPAttackRageCost )
+	{
+		ActionComp->StartActionByName(this, TEXT("SpecialAttack"));
+		AttribComp->RemoveRage(this, SPAttackRageCost );
+	}
+	
 }
 
 void ASCharacter::TeleportAttack()
@@ -134,10 +159,18 @@ void ASCharacter::PrimaryInteract()
 
 void ASCharacter::OnHealthChanged(AActor* InstigatorActor, USAttributeComponent* OwningComp, float NewHealth, float MaximumHealth, float Delta)
 {
+	
 	if (Delta < 0.0f )
 	{
+		AttribComp->AddRage(InstigatorActor, Delta );
 		GetMesh()->SetScalarParameterValueOnMaterials( TimeToHitParamName, GetWorld()->TimeSeconds );
 	}
+
+	// if (Delta != 0.0f && ActionComp->ActiveGameplayTags.HasTag(TEXT("ThornBuff")))
+	// {
+	// 	
+	// }
+	//
 	if ( NewHealth <= 0.0f && Delta <= 0.0f )
 	{
 		APlayerController* Pc = Cast<APlayerController>(GetController() );
@@ -145,3 +178,10 @@ void ASCharacter::OnHealthChanged(AActor* InstigatorActor, USAttributeComponent*
 		
 	}
 }
+
+void ASCharacter::OnRageChanged(AActor* InstigatedActor, USAttributeComponent* OwningComp, float NewRage,
+	float MaximumRage, float Delta)
+{
+	UE_LOG(LogTemp, Warning, TEXT("OnRageChange Instigator: %s, OwningComp: %s, Granted Rage: %f"), *GetNameSafe(InstigatedActor), *GetNameSafe(OwningComp), Delta);
+}
+

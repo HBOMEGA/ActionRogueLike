@@ -26,6 +26,7 @@ ASAICharacter::ASAICharacter()
 
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 	TimeToHitParamName = TEXT("TimeToHit");
+	LifeTime = 2.0f;
 }
 
 void ASAICharacter::PostInitializeComponents()
@@ -43,6 +44,7 @@ void ASAICharacter::SetTargetActor(AActor* NewTargetActor)
 		AIC->GetBlackboardComponent()->SetValueAsObject(TEXT("TargetActor"), NewTargetActor );				
 	}
 }
+
 
 void ASAICharacter::OnHealthChanged(AActor* InstigatorActor, USAttributeComponent* OwningComp, float NewHealth,
                                     float MaximumHealth, float Delta)
@@ -93,9 +95,35 @@ void ASAICharacter::OnHealthChanged(AActor* InstigatorActor, USAttributeComponen
 
 void ASAICharacter::OnPawnSeen(APawn* Pawn)
 {
+	
+	if (PlayerSpottedPopup == nullptr )
+	{
+		PlayerSpottedPopup = CreateWidget<USWorldUserWidget>(GetWorld(), PlayerSpottedWidgetClass );
+		if( PlayerSpottedPopup )
+		{
+			PlayerSpottedPopup->AttachedActor = this;
+			PlayerSpottedPopup->AddToViewport();
+			
+			
+			FTimerHandle TimerHandle_PlayerPopup;
+			FTimerDelegate Delegate;
+			Delegate.BindUFunction(this, "RemovePlayerWidget", PlayerSpottedPopup );
+			
+			GetWorldTimerManager().SetTimer(TimerHandle_PlayerPopup, Delegate, LifeTime, false );
+			
+		}
+	}
 	SetTargetActor(Pawn);
 	DrawDebugString(GetWorld(), GetActorLocation(), TEXT("Player Spotted"), nullptr, FColor::White, 4.0f, true );	
 }
 
+void ASAICharacter::RemovePlayerWidget( USWorldUserWidget* WidgetToRemove )
+{
+	if ( WidgetToRemove )
+	{
+		WidgetToRemove->RemoveFromParent();
+	}
+	
+}
 
 

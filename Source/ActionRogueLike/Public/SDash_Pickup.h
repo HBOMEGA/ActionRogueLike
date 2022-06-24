@@ -4,19 +4,25 @@
 
 #include "CoreMinimal.h"
 #include "SBasePickup.h"
-#include "SHealthPotion.generated.h"
+#include "SDash_Pickup.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class ACTIONROGUELIKE_API ASHealthPotion : public ASBasePickup
+class ACTIONROGUELIKE_API ASDash_Pickup : public ASBasePickup
 {
 	GENERATED_BODY()
 
 	virtual void Interact_Implementation(APawn* InstigatorPawn) override;
-	
-public:	
-	ASHealthPotion();
+
+
+public:
+	ASDash_Pickup();
+
+protected:
+
+	UPROPERTY(EditAnywhere, Category= "Action")
+	TSubclassOf<class USAction> GrantAction;
 	
 };

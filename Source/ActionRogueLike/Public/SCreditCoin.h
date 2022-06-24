@@ -19,8 +19,5 @@ class ACTIONROGUELIKE_API ASCreditCoin : public ASBasePickup
 public:
 	ASCreditCoin();
 
-protected:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	UStaticMeshComponent* MeshComp;
 	
 };

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "SWorldUserWidget.h"
 #include "GameFramework/Character.h"
 #include "SAICharacter.generated.h"
 
@@ -16,11 +17,22 @@ public:
 	ASAICharacter();
 
 protected:
+	
+	UPROPERTY(EditAnywhere, Category= "UI")
+	float LifeTime;
+	
 	UPROPERTY(VisibleAnywhere, Category= "UI")
-	class USWorldUserWidget* ActiveHealthBar;
+	USWorldUserWidget* ActiveHealthBar;
 	
 	UPROPERTY(EditDefaultsOnly, Category= "UI")
 	TSubclassOf< USWorldUserWidget> HealthBarWidgetClass;
+
+	UPROPERTY(VisibleAnywhere, Category= "UI")
+	USWorldUserWidget* PlayerSpottedPopup;
+
+	UPROPERTY(EditDefaultsOnly, Category= "UI")
+	TSubclassOf< USWorldUserWidget> PlayerSpottedWidgetClass;
+	
 	
 	UPROPERTY(VisibleAnywhere, Category= "Effects")
 	FName TimeToHitParamName;
@@ -38,6 +50,9 @@ protected:
 	virtual void PostInitializeComponents() override;
 
 	void SetTargetActor(AActor* NewTargetActor);
+
+	UFUNCTION()
+	void RemovePlayerWidget( USWorldUserWidget* WidgetToRemove);
 	
 
 	UFUNCTION()

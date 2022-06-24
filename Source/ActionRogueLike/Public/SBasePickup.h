@@ -29,6 +29,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category= "Components")
 	class USphereComponent* SphereComp;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	UStaticMeshComponent* MeshComp;
+
 public:
 	
 	virtual void Interact_Implementation(APawn* InstigatorPawn) override;
